@@ -10,7 +10,7 @@ const productsInCart = [
   initialData.products[2],
 ]
 
-export default function() {
+export default function CartPage() {
 
   // redirect('/empty');
 
