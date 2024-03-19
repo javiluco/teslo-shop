@@ -31,10 +31,15 @@ enum Gender {
   unisex
 }
 
+enum Role {
+  admin
+  user
+}
+
 //Para crear las tablas se usa model
 model Category {
-  id   String @id @default(uuid())
-  name String @unique
+  id      String    @id @default(uuid())
+  name    String    @unique
   Product Product[]
 }
 
@@ -50,18 +55,28 @@ model Product {
   gender      Gender
 
   //Relaciones
-  category Category @relation(fields: [categoryId], references:[id])
+  category   Category @relation(fields: [categoryId], references: [id])
   categoryId String
-  
+
   ProductImage ProductImage[]
 
   @@index([gender])
 }
 
 model ProductImage {
-  id Int @id @default(autoincrement())
+  id  Int    @id @default(autoincrement())
   url String
 
-  product Product @relation(fields: [productId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
   productId String
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  password      String
+  role          Role      @default(user)
+  image         String?
 }
