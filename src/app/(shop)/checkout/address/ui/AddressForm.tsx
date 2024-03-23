@@ -1,7 +1,7 @@
 'use client';
 
 import { deleteUserAddress, setUserAddress } from "@/actions";
-import type { Address, Country } from "@/interfaces";
+import type { Address, Country, UserAddress } from "@/interfaces";
 import { useAddressStore } from "@/store";
 import clsx from "clsx";
 import { useSession } from "next-auth/react";
@@ -23,15 +23,23 @@ type FormInputs = {
 
 interface Props {
     countries: Country[];
-    userStoredAddress?: Partial<Address>;
+    userStoredAddress?: Partial<UserAddress>;
 }
 
 export const AddressForm = ({ countries, userStoredAddress={} }: Props) => {
 
+    const {
+        id, // No se usará
+        userId, // No se usará
+        countryId: country,
+        ...restUserDbAddress
+      } = userStoredAddress;
+
     const router = useRouter();
     const { handleSubmit, register, formState: { isValid }, reset } = useForm<FormInputs>({
         defaultValues: {
-            ...(userStoredAddress as any),
+            ...restUserDbAddress,
+            country,
             rememberAddress: false,
         }
     });
@@ -53,8 +61,8 @@ export const AddressForm = ({ countries, userStoredAddress={} }: Props) => {
 
     const onSubmit = async(data: FormInputs) => {
 
-        setAddress(data);
         const { rememberAddress, ...restAddress } = data;
+        setAddress(restAddress);
 
         if (rememberAddress) {
             await setUserAddress(restAddress, session!.user.id);
