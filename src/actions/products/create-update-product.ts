@@ -4,6 +4,8 @@ import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
 import { Gender, Product, Size } from '@prisma/client';
 import { z } from 'zod';
+import { v2 as cloudinary } from 'cloudinary';
+cloudinary.config(process.env.CLOUDINARY_URL ?? '');
 
 const productSchema = z.object({
   id: z.string().uuid().optional().nullable(),
@@ -78,8 +80,20 @@ export const createUpdateProduct = async (formData: FormData) => {
 
       // Proceso de carga y guardado de imagenes
       // Recorrer las imagenes y guardarlas
-      if( formData.getAll('images') ){
-        console.log( formData.getAll('images'))
+      if (formData.getAll('images')) {
+        // [https://url.jpg, https://url.jpg ] esto espero como respuesta
+        const images = await uploadImages(formData.getAll('images') as File[]);
+
+        if( !images ){
+          throw new Error('No se pudo cargar las imágenes, rollingback')
+        }
+
+        await prisma.productImage.createMany({
+          data: images.map( image =>({
+            url: image!,
+            productId: product.id,
+          }))
+        })
       }
 
 
@@ -99,13 +113,46 @@ export const createUpdateProduct = async (formData: FormData) => {
       product: prismaTx.product,
     }
 
-    
+
   } catch (error) {
-    
+
     return {
       ok: false,
       message: 'Revisar los logs, no se pudo actualizar/crear'
     }
+  }
+
+}
+
+const uploadImages = async (images: File[]) => {
+
+  try {
+    const uploadPromises = images.map(async (image) => {
+
+      try {
+
+        const buffer = await image.arrayBuffer();
+        const base64Image = Buffer.from(buffer).toString('base64');
+
+        return cloudinary.uploader.upload(`data:image/png;base64,${base64Image}`)
+          .then(r => r.secure_url);
+
+      } catch (error) {
+        console.log(error);
+        return null;
+
+      }
+    })
+
+    const uploadedImages = await Promise.all( uploadPromises );
+    return uploadedImages;
+
+
+  } catch (error) {
+
+    console.log(error);
+    return null;
+
   }
 
 }

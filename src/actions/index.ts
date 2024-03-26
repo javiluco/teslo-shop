@@ -4,6 +4,7 @@ export * from "./products/product-pagination";
 export * from "./products/get-product-by-slug";
 export * from "./products/get-stock-by-slug";
 export * from "./products/create-update-product";
+export * from "./products/delete-product-image";
 
 export * from './auth/login';
 export * from './auth/logout';
