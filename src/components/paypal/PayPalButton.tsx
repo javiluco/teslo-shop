@@ -31,10 +31,12 @@ interface Props {
     const createOrder = async(data: CreateOrderData, actions: CreateOrderActions): Promise<string> => {
   
       const transactionId = await actions.order.create({
+        intent: 'CAPTURE',
         purchase_units: [
           {
             invoice_id: orderId,
             amount: {
+              currency_code: 'USD',
               value: `${ rountedAmount }`,
             }
   
